@@ -189,32 +189,3 @@ plot_distribution(y_test, "Test Set", axes[1, 1])
 
 plt.tight_layout()
 plt.show()
-
-"""### Justification of Design Choices
-
-1.  **Dataset Selection (CIFAR-10)**:
-    *   **Complexity**: CIFAR-10 consists of 60,000 32x32 color images across 10 classes. It offers a moderate level of complexity making it ideal for demonstrating semi-supervised learning techniques within a reasonable computational budget.
-
-
-2.  **Preprocessing Techniques**:
-    *   **Z-score Normalization**: Standardizes the data to have a mean of 0 and a standard deviation of 1. This helps in faster convergence during training by ensuring gradients are well-scaled.
-    *   **Min-Max Scaling**: Rescales pixel values to a fixed range (e.g., [0, 1] or [-1, 1]). This preserves the original distribution shape while bounding the values, which can be beneficial for certain neural network activations.
-
-3.  **Data Augmentation**:
-    *   **Random Horizontal Flip**: Since natural images (like objects or animals in CIFAR-10) often possess horizontal symmetry, flipping them increases dataset diversity without altering the semantic label.
-    *   **Random Crop**: This forces the model to focus on different parts of the image, promoting invariance to the object's position and reducing overfitting to specific spatial features.
-
-## Summary
-
-### Data Analysis Key Findings
-*   **Dataset Partitioning**: The CIFAR-10 dataset (60,000 images total) was successfully split using stratified sampling to ensure class balance. The resulting partitions are:
-    *   **Unlabeled Training Set**: 38,400 samples (80% of training pool).
-    *   **Labeled Training Set**: 9,600 samples (20% of training pool).
-    *   **Validation Set**: 6,000 samples (10% of total).
-    *   **Test Set**: 6,000 samples (10% of total).
-*   **Statistical Analysis**:
-    *   The original data (0-255 range) had a global mean of **120.94**.
-    *   Min-Max scaling successfully mapped the data to the [0, 1] range with a new mean of **0.4743**.
-    *   Per-channel statistics derived from the training pool were Mean **[0.4922, 0.4830, 0.4475]** and Std **[0.2466, 0.2431, 0.2613]**.
-*   **Normalization Verification**: Applying Z-score normalization using the calculated per-channel statistics resulted in data with a global Mean of **~0.0000** and Standard Deviation of **~1.0000**, confirming the preprocessing pipeline is correct.
-"""
