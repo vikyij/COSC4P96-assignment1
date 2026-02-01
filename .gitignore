@@ -1,0 +1,4 @@
+.venv/
+data/cifar-10-batches-py/
+data/*.tar.gz
+.DS_Store
