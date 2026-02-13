@@ -4,3 +4,4 @@ torchvision
 matplotlib
 scikit-learn
 pillow
+pandas
