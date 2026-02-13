@@ -1,99 +1,23 @@
 import numpy as np
-import os
-import pickle
-
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
-load_path = os.path.join(BASE_DIR, "data")
-
-# 3. Load the data splits indices:
-loaded_data = np.load(os.path.join(load_path, 'data_splits.npz'))
-labeled_indices = loaded_data['labeled_indices']
-y_labeled = loaded_data['y_labeled']
-unlabeled_indices = loaded_data['unlabeled_indices']
-y_unlabeled = loaded_data['y_unlabeled']
-val_indices = loaded_data['val_indices']
-y_val = loaded_data['y_val']
-test_indices = loaded_data['test_indices']
-y_test = loaded_data['y_test']
-print("Data split indices loaded successfully.")
-
-# 4. Load the normalization statistics:
-with open(os.path.join(load_path, 'normalization_stats.pkl'), 'rb') as f:
-  normalization_stats = pickle.load(f)
-mean = normalization_stats['mean']
-std = normalization_stats['std']
-print("Normalization statistics loaded successfully.")
-
-
+import os,sys
 import torch
-import torchvision
-import torchvision.transforms as transforms
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
+import torch.nn as nn
+import time
+import torch.optim as optim
+import matplotlib.pyplot as plt
+import pandas as pd
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# 1. Define transformation pipeline
-# Using loaded mean and std statistics from the environment
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=mean.tolist(), std=std.tolist())
-])
+from src.common import make_loaders, initialize_weights, EarlyStopping
 
-# 2. Download CIFAR-10
-print("Downloading/Loading CIFAR-10 dataset...")
-trainset_raw = torchvision.datasets.CIFAR10(root='./data', train=True, download=True)
-testset_raw = torchvision.datasets.CIFAR10(root='./data', train=False, download=True)
-
-# 3. Concatenate the image data
-# trainset.data is (50000, 32, 32, 3), testset.data is (10000, 32, 32, 3)
-full_data = np.concatenate((trainset_raw.data, testset_raw.data), axis=0)
-print(f"Full data shape: {full_data.shape}")
-
-# 4. Define custom Dataset class
-class CIFAR10Subset(Dataset):
-    def __init__(self, full_data, indices, targets, transform=None):
-        self.full_data = full_data
-        self.indices = indices
-        self.targets = targets
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.indices)
-
-    def __getitem__(self, idx):
-        # Retrieve original image using the stored index
-        original_idx = self.indices[idx]
-        image = self.full_data[original_idx]
-        label = self.targets[idx]
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, label
-
-# 5. Instantiate datasets
-labeled_dataset = CIFAR10Subset(full_data, labeled_indices, y_labeled, transform=transform)
-val_dataset = CIFAR10Subset(full_data, val_indices, y_val, transform=transform)
-test_dataset = CIFAR10Subset(full_data, test_indices, y_test, transform=transform)
-
-# 6. Create DataLoaders
-labeled_loader = DataLoader(labeled_dataset, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+labeled_dataset, val_dataset, test_dataset,labeled_loader, val_loader, test_loader = make_loaders(batch_size=64)
 
 print(f"Labeled dataset size: {len(labeled_dataset)}")
 print(f"Validation dataset size: {len(val_dataset)}")
 print(f"Test dataset size: {len(test_dataset)}")
 print("DataLoaders created: labeled_loader, val_loader, test_loader")
 
-"""## Define Network Architecture
-
-Implement the `FeedForwardNN` class with configurable layers and activations.
-
-"""
-
-import torch.nn as nn
-
+## Define Network Architecture - Implement the `FeedForwardNN` class with configurable layers and activations.
 class FeedForwardNN(nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size, activation='relu'):
         super(FeedForwardNN, self).__init__()
@@ -141,94 +65,12 @@ model = FeedForwardNN(input_size, hidden_sizes, output_size, activation)
 print("Model Architecture:")
 print(model)
 
-"""## Implement Training Utilities
-
-Create helper functions for weight initialization and an EarlyStopping class.
-"""
-
-def initialize_weights(model, init_type='xavier', activation='relu'):
-    """
-    Initializes weights of the model based on the specified type.
-
-    Args:
-        model (nn.Module): The neural network model.
-        init_type (str): 'uniform', 'normal', or 'xavier'.
-        activation (str): Activation function used in the model ('relu', etc.).
-    """
-    for m in model.modules():
-        if isinstance(m, nn.Linear):
-            fan_in = m.weight.size(1)
-
-            if init_type == 'uniform':
-                limit = 1.0 / np.sqrt(fan_in)
-                nn.init.uniform_(m.weight, -limit, limit)
-
-            elif init_type == 'normal':
-                nn.init.normal_(m.weight, mean=0, std=0.01)
-
-            elif init_type == 'xavier':
-                if activation.lower() == 'relu':
-                    # He initialization for ReLU
-                    nn.init.kaiming_uniform_(m.weight, nonlinearity='relu')
-                else:
-                    # Xavier/Glorot initialization for Sigmoid/Tanh
-                    nn.init.xavier_uniform_(m.weight)
-
-            else:
-                raise ValueError(f"Unknown init_type: {init_type}")
-
-            # Initialize bias to zero
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-
-class EarlyStopping:
-    """
-    Stops training if the current validation error exceeds the mean plus
-    standard deviation of the recent validation errors.
-    """
-    def __init__(self, window_size=5):
-        self.window_size = window_size
-        self.history = []
-
-    def check_stop(self, current_val_loss):
-        """
-        Checks if training should stop.
-
-        Args:
-            current_val_loss (float): The validation loss for the current epoch.
-
-        Returns:
-            bool: True if training should stop, False otherwise.
-        """
-        # If history is not full yet, just add and continue
-        if len(self.history) < self.window_size:
-            self.history.append(current_val_loss)
-            return False
-
-        # Calculate statistics of the moving window
-        mean_loss = np.mean(self.history)
-        std_loss = np.std(self.history)
-
-        # Check criterion: EV > EV_bar + sigma_EV
-        stop = current_val_loss > (mean_loss + std_loss)
-
-        # Update history
-        self.history.append(current_val_loss)
-        if len(self.history) > self.window_size:
-            self.history.pop(0)  # Remove the oldest entry
-
-        return stop
 
 print("Training utilities (initialize_weights, EarlyStopping) implemented.")
 
 """## Run Baseline Experiments
-
 Execute the training loop using SGD with Momentum on the labeled dataset for 3 different random seeds (1, 123, 12345). Track training time, training/validation loss, and accuracy.
-
 """
-
-import time
-import torch.optim as optim
 
 # Added init_type parameter to allow comparison of different initialization methods
 def run_experiment(seed, input_size=3072, hidden_sizes=[256, 128], output_size=10,
@@ -369,12 +211,6 @@ print("All experiments completed.")
 
 
 ## Visualize and Report Results
-
-
-
-import matplotlib.pyplot as plt
-import pandas as pd
-
 # 1. Setup the figure for plotting
 num_seeds = len(results)
 fig, axes = plt.subplots(num_seeds, 2, figsize=(15, 5 * num_seeds))
