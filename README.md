@@ -15,7 +15,7 @@ It is structured into five experimental stages:
 
 ##  Environment Setup
 
-### 1️⃣ Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone <https://github.com/vikyij/COSC4P96-assignment1.git>
