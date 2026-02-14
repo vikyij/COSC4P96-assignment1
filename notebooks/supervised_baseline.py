@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.common import make_loaders, initialize_weights, EarlyStopping
 
-labeled_dataset, val_dataset, test_dataset,labeled_loader, val_loader, test_loader = make_loaders(batch_size=64)
+labeled_dataset, val_dataset, test_dataset,labeled_loader, val_loader, test_loader, _, _ = make_loaders(batch_size=64)
 
 print(f"Labeled dataset size: {len(labeled_dataset)}")
 print(f"Validation dataset size: {len(val_dataset)}")
@@ -272,3 +272,18 @@ print(summary_df.to_string(index=False))
 print("\n--- Aggregate Statistics ---")
 print(f"Mean Test Accuracy: {mean_acc:.4f}")
 print(f"Std Dev Test Accuracy: {std_acc:.4f}")
+
+# Save Results to CSV
+
+# Add hyperparameters to summary
+for row in summary_data:
+    row.update({
+        "lr": 0.01,
+        "momentum": 0.9,
+        "init_type": "xavier",
+        "activation": "relu",
+    })
+
+os.makedirs("results", exist_ok=True)
+df = pd.DataFrame(summary_data)
+df.to_csv("results/supervised.csv", index=False)

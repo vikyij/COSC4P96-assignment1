@@ -74,6 +74,7 @@ def make_loaders(batch_size=64, shuffle_labeled=True):
     loaded, mean, std = load_stage1_artifacts()
     full_data = load_full_cifar10()
     transform = build_transform(mean, std)
+    unlabeled_indices = loaded['unlabeled_indices']
 
     labeled_dataset = CIFAR10Subset(full_data, loaded["labeled_indices"], loaded["y_labeled"], transform)
     val_dataset     = CIFAR10Subset(full_data, loaded["val_indices"], loaded["y_val"], transform)
@@ -83,7 +84,7 @@ def make_loaders(batch_size=64, shuffle_labeled=True):
     val_loader     = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader    = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    return labeled_dataset, val_dataset, test_dataset, labeled_loader, val_loader, test_loader
+    return labeled_dataset, val_dataset, test_dataset, labeled_loader, val_loader, test_loader, full_data, unlabeled_indices
 
 
 def initialize_weights(model, init_type="xavier", activation="relu"):
