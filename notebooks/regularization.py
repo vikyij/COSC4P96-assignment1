@@ -378,7 +378,10 @@ for row in dropout_summary_data:
         "init_type": "xavier",
         "activation": activation,
         "dropout_rate": dropout_rate,     
-        "weight_decay": 0.0
+        "weight_decay": 0.0,
+        "wd_mean_acc": wd_mean_acc,
+        "wd_std_acc": wd_std_acc,
+        "dropout_mean_acc": dropout_mean_acc
     })
 
 # --- Weight decay rows ---

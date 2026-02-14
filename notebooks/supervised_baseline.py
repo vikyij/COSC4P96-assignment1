@@ -282,6 +282,8 @@ for row in summary_data:
         "momentum": 0.9,
         "init_type": "xavier",
         "activation": "relu",
+        "mean_test_accuracy": float(mean_acc),
+        "std_test_accuracy": float(std_acc)
     })
 
 os.makedirs("results", exist_ok=True)
