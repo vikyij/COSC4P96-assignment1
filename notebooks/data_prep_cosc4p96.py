@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-# From Supervised to Semi-Supervised Learning A Complete Machine Learning Pipeline
 
-Stage 1: Data Preparation and Preprocessing.
-
-## Project Setup
-
-Initialize the environment, Import necessary libraries and set random seeds.
-"""
+#Stage 1: Data Preparation and Preprocessing.
+#Initialize the environment, Import necessary libraries and set random seeds.
 
 import torch
 import numpy as np
@@ -16,6 +9,8 @@ import matplotlib.pyplot as plt
 import os
 import torchvision
 from sklearn.model_selection import train_test_split
+from torchvision import transforms
+from PIL import Image
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -30,10 +25,7 @@ def set_seed(seed=42):
 
 set_seed(42)
 
-"""## Data Loading and Partitioning
-
-Load the complete CIFAR-10 dataset and partition it into Test, Validation, Labeled, and Unlabeled sets according to the specified percentages.
-"""
+# Data Loading and Partitioning - Load the complete CIFAR-10 dataset and partition it into Test, Validation, Labeled, and Unlabeled sets according to the specified percentages.
 
 # Load CIFAR-10 dataset
 train_ds = torchvision.datasets.CIFAR10(root='./data', train=True, download=True)
@@ -67,11 +59,9 @@ print(f"Validation Set: {len(y_val)} samples")
 print(f"Labeled Set: {len(y_labeled)} samples")
 print(f"Unlabeled Set: {len(y_unlabeled)} samples")
 
-"""## Preprocessing Implementation and Analysis
+# Preprocessing Implementation and Analysis
+# Implement Min-Max scaling and Z-score normalization on the training pool data, calculate statistics from the training pool, and analyze feature ranges.
 
-Implement Min-Max scaling and Z-score normalization on the training pool data, calculate statistics from the training pool, and analyze feature ranges.
-
-"""
 
 # 1. Original Data Statistics
 # Convert to float for accurate statistical calculation
@@ -115,13 +105,8 @@ print(f"  Max: {X_train_zscore.max():.4f}")
 print(f"  Mean: {X_train_zscore.mean():.4f} (Expected ~0)")
 print(f"  Std: {X_train_zscore.std():.4f} (Expected ~1)")
 
-"""## Data Augmentation Visualization
-
-Implement Random Horizontal Flip and Random Crop augmentations and visualize the results on a few sample images to verify their effects.
-"""
-
-from torchvision import transforms
-from PIL import Image
+# Data Augmentation Visualization
+# Implement Random Horizontal Flip and Random Crop augmentations and visualize the results on a few sample images to verify their effects.
 
 # Define the augmentation pipeline
 # ToPILImage is needed because X_train_pool contains numpy arrays
@@ -159,17 +144,11 @@ for i, idx in enumerate(indices):
 plt.tight_layout()
 plt.show()
 
-"""## Class Distribution Analysis
-
-
-Plot the class distributions for the Labeled, Unlabeled, Validation, and Test sets to verify data balance.
-"""
-
-import matplotlib.pyplot as plt
-import numpy as np
+# Class Distribution Analysis
+# Plot the class distributions for the Labeled, Unlabeled, Validation, and Test sets to verify data balance.
 
 def plot_distribution(y_data, title, ax):
-    """Helper function to plot class distribution on a given axis."""
+    # Helper function to plot class distribution on a given axis.
     unique, counts = np.unique(y_data, return_counts=True)
     ax.bar(unique, counts, align='center', alpha=0.7, edgecolor='black')
     ax.set_xticks(range(10))
