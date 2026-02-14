@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.common import make_loaders, initialize_weights, EarlyStopping
 
-labeled_dataset, val_dataset, test_dataset,labeled_loader, val_loader, test_loader = make_loaders(batch_size=64)
+labeled_dataset, val_dataset, test_dataset,labeled_loader, val_loader, test_loader, _, _ = make_loaders(batch_size=64)
 
 print(f"Labeled dataset size: {len(labeled_dataset)}")
 print(f"Validation dataset size: {len(val_dataset)}")
@@ -67,42 +67,7 @@ dropout_rate = 0.5
 model_dropout = FeedForwardNN(input_size, hidden_sizes, output_size, activation, dropout_rate)
 print("Model Architecture with Dropout:")
 print(model_dropout)
-#     """
-#     Stops training if the current validation error exceeds the mean plus
-#     standard deviation of the recent validation errors.
-#     """
-#     def __init__(self, window_size=5):
-#         self.window_size = window_size
-#         self.history = []
 
-#     def check_stop(self, current_val_loss):
-#         """
-#         Checks if training should stop.
-
-#         Args:
-#             current_val_loss (float): The validation loss for the current epoch.
-
-#         Returns:
-#             bool: True if training should stop, False otherwise.
-#         """
-#         # If history is not full yet, just add and continue
-#         if len(self.history) < self.window_size:
-#             self.history.append(current_val_loss)
-#             return False
-
-#         # Calculate statistics of the moving window
-#         mean_loss = np.mean(self.history)
-#         std_loss = np.std(self.history)
-
-#         # Check criterion: EV > EV_bar + sigma_EV
-#         stop = current_val_loss > (mean_loss + std_loss)
-
-#         # Update history
-#         self.history.append(current_val_loss)
-#         if len(self.history) > self.window_size:
-#             self.history.pop(0)  # Remove the oldest entry
-
-#         return stop
 
 print("Training utilities (initialize_weights, EarlyStopping) implemented.")
 
@@ -395,3 +360,44 @@ print(weight_decay_summary_df.to_string(index=False))
 print("\n--- Aggregate Statistics ---")
 print(f"Mean Test Accuracy: {wd_mean_acc:.4f}")
 print(f"Std Dev Test Accuracy: {wd_std_acc:.4f}")
+
+
+# Save Stage 3 (combined) Results to ONE CSV
+rows = []
+
+# Dropout rows 
+for row in dropout_summary_data:
+    rows.append({
+        "Method": "Dropout",
+        "Seed": row["Seed"],
+        "Test Accuracy": row["Test Accuracy"],
+        "Epochs to Converge": row["Epochs to Converge"],
+        "Time (s)": row["Time (s)"],
+        "lr": 0.01,
+        "momentum": 0.9,
+        "init_type": "xavier",
+        "activation": activation,
+        "dropout_rate": dropout_rate,     
+        "weight_decay": 0.0
+    })
+
+# --- Weight decay rows ---
+for row in wd_summary_data:
+    rows.append({
+        "Method": "Weight Decay",
+        "Seed": row["Seed"],
+        "Test Accuracy": row["Test Accuracy"],
+        "Epochs to Converge": row["Epochs to Converge"],
+        "Time (s)": row["Time (s)"],
+        "lr": 0.01,
+        "momentum": 0.9,
+        "init_type": "xavier",
+        "activation": activation,
+        "dropout_rate": 0.0,
+        "weight_decay": weight_decay      
+    })
+
+os.makedirs("results", exist_ok=True)
+df = pd.DataFrame(rows)
+df.to_csv("results/regularization.csv", index=False)
+
