@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -28,8 +29,7 @@ consistency_transform = transforms.Compose([
 
 print("Consistency data augmentation pipeline (consistency_transform) defined successfully.")
 
-import torch
-from torch.utils.data import Dataset, DataLoader
+
 
 # 1. Define custom Dataset class for unlabeled data
 class CIFAR10UnlabeledSubset(Dataset):
@@ -399,7 +399,9 @@ for seed in seeds:
         "dropout_rate": 0.0,
         "weight_decay": 0.0,
         "lambda_consistency": lambda_consistency,
-        "consistency_warmup_epochs": consistency_warmup_epochs
+        "consistency_warmup_epochs": consistency_warmup_epochs,
+        "consistency_mean_acc": consistency_mean_acc,
+        "consistency_std_acc": consistency_std_acc
     })
 
 os.makedirs("results", exist_ok=True)
