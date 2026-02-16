@@ -120,7 +120,7 @@ def run_experiment(seed, input_size=3072, hidden_sizes=[256, 128], output_size=1
         correct_train = 0
         total_train = 0
 
-        # Requirement: Train using only the 10% labeled data
+        # Requirement: Train using only the 20% labeled data
         for inputs, labels in labeled_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 

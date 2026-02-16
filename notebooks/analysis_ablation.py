@@ -84,7 +84,7 @@ consistency_mean_time = float(np.mean(consistency_times))
 
 # Stage 5a: Component Contribution Analysis (from saved CSVs)
 component_analysis_data = [
-    {"Model": "Baseline (10% Labels)", "Mean Test Accuracy": baseline_mean_acc, "Std Dev": baseline_std_acc},
+    {"Model": "Baseline (20% Labels)", "Mean Test Accuracy": baseline_mean_acc, "Std Dev": baseline_std_acc},
 ]
 
 if dropout_mean_acc > 0:
